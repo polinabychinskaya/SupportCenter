@@ -1,0 +1,10 @@
+# БД
+# Supporters. Создаются только админом 
+# Users: без записи в таблице supporters
+# Tickets: sender, supporter(Тикет отходит к самому разгруженному представителю службы поддержки), created_at (DateTime), updated_at (DateTime), status(in_progress/frozen/done)
+# Авторизация. JWT.
+# Примерный набор эндпоинты
+# POST /register {username: "stirng", email: "string", password: "pass", }. Return {accessToken: "token", refreshToken: "token"}
+# From user
+# GET /tickets, GET /tickets/{id}
+# POST /tickets {}
