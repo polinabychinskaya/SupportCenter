@@ -1,12 +1,18 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from . import serializers, models
+from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
+from . import serializers
+from .. import models
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 import jwt, datetime
 from rest_framework import generics
+from django.http import HttpResponse
+import os
 
 # Create your views here.
+
 class Register(APIView):
     def post(self, request):
         serializer = serializers.UserSerializer(data=request.data)
@@ -30,7 +36,7 @@ class Login(APIView):
             'iat': datetime.datetime.utcnow()
         }
 
-        token = jwt.encode(payload, 'secret', algorithm='HS256')
+        token = jwt.encode(payload, str(os.getenv('SECRET')), algorithm='HS256')
 
         response = Response()
 
@@ -45,12 +51,7 @@ class Login(APIView):
 class UserView(APIView):
     def get(self, request):
         token = request.COOKIES.get('jwt')
-        if not token:
-            raise AuthenticationFailed('You are not logged in!')
-        try:
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('You are not logged in!')
+        payload = jwt.decode(token, str(os.getenv('SECRET')), algorithms=['HS256'])
         user = models.User.objects.filter(id=payload['id']).first()
         serializer = serializers.UserSerializer(user)
         return Response(serializer.data)
@@ -74,6 +75,10 @@ class AddSupporter(APIView):
 class AddTicket(APIView):
     def post(self, request):
         serializer = serializers.TicketSerializer(data=request.data)
+        token = self.request.COOKIES.get('jwt')
+        payload = jwt.decode(token, str(os.getenv('SECRET')), algorithms=['HS256'])
+        user = models.User.objects.filter(id=payload['id']).first()
+        request.data['sender'] = user.id
         supporter = models.Supporter.objects.filter(status="Available").first()
         request.data['supporter'] = supporter.id
         supporter.status = 'Processing'
@@ -81,21 +86,19 @@ class AddTicket(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-        
+
 class GetAllTickets(generics.ListCreateAPIView):
-    queryset = models.Tickets.objects.all()
+    def get_queryset(self):
+        queryset = models.Tickets.objects.all()
+        return queryset
     serializer_class = serializers.TicketSerializer
+     
 
 class GetAllTicketsForUser(generics.ListAPIView):
     serializer_class = serializers.TicketSerializer
     def get_queryset(self):
         token = self.request.COOKIES.get('jwt')
-        if not token:
-            raise AuthenticationFailed('You are not logged in!')
-        try:
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('You are not logged in!')
+        payload = jwt.decode(token, str(os.getenv('SECRET')), algorithms=['HS256'])
         user = models.User.objects.filter(id=payload['id']).first()
         queryset = models.Tickets.objects.filter(sender=user)
         return queryset
