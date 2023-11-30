@@ -7,12 +7,14 @@ services:
       POSTGRES_DB: 'support_center'
       POSTGRES_USER: 'admin'
       POSTGRES_PASSWORD: 'polina2004'
+    ports:
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: sh -c 'python manage.py runserver 0.0.0.0:8000 && python manage.py migrate'
     volumes:
       - .:/code 
     ports:
