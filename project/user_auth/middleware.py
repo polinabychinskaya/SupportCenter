@@ -11,7 +11,7 @@ class AuthMiddleware:
 
     def __call__(self, request):
         token = request.COOKIES.get('jwt')
-        if request.path == reverse('api:login'):
+        if request.path == reverse('api:login') or request.path == reverse('api:register'):
             response = self.get_response(request)
             return response
         if not token:
