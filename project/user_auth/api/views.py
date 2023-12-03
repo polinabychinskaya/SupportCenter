@@ -65,15 +65,14 @@ class Logout(APIView):
         }
         return response
 
-class AddSupporter(APIView):
-    def post(self, request):
-        serializer = serializers.SupporterSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-    
-class AddTicket(APIView):
-    def post(self, request):
+class SupportersViewSet(viewsets.ModelViewSet):
+    queryset = models.Supporter.objects.all()
+    serializer_class = serializers.SupporterSerializer
+
+class TicketsViewSet(viewsets.ModelViewSet):
+    queryset = models.Tickets.objects.all()
+    serializer_class = serializers.TicketSerializer
+    def create(self, request):
         serializer = serializers.TicketSerializer(data=request.data)
         token = self.request.COOKIES.get('jwt')
         payload = jwt.decode(token, str(os.getenv('SECRET')), algorithms=['HS256'])
@@ -86,12 +85,6 @@ class AddTicket(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-
-class GetAllTickets(generics.ListCreateAPIView):
-    def get_queryset(self):
-        queryset = models.Tickets.objects.all()
-        return queryset
-    serializer_class = serializers.TicketSerializer
      
 
 class GetAllTicketsForUser(generics.ListAPIView):
