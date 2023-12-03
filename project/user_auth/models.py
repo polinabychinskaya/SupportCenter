@@ -54,7 +54,8 @@ class Tickets(models.Model):
     sender = models.ForeignKey( 
         User, 
         on_delete=models.CASCADE, 
-        verbose_name='Sender' 
+        verbose_name='Sender',
+        null=True
     ) 
     supporter = models.ForeignKey( 
         Supporter, 
