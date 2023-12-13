@@ -11,6 +11,7 @@ from rest_framework import generics
 from django.http import HttpResponse
 import os
 
+
 # Create your views here.
 
 class Register(APIView):
@@ -78,12 +79,29 @@ class TicketsViewSet(viewsets.ModelViewSet):
         payload = jwt.decode(token, str(os.getenv('SECRET')), algorithms=['HS256'])
         user = models.User.objects.filter(id=payload['id']).first()
         request.data['sender'] = user.id
-        supporter = models.Supporter.objects.filter(status="Available").first()
+        count = models.Supporter.objects.values_list('count', flat=True)
+        min_count = min(count)
+        supporter = models.Supporter.objects.filter(count=min_count).first()
         request.data['supporter'] = supporter.id
-        supporter.status = 'Processing'
+        supporter.count += 1
         supporter.save()
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response(serializer.data)
+    
+    # PUT - replaces the whole record
+    # PATCH - partial modifications to the record
+    def partial_update(self, request, *args, **kwargs):
+        ticket = self.get_object()
+        data = request.data
+        ticket.status = data.get('status', ticket.status)
+        ticket.save() 
+        serializer = self.get_serializer(ticket)
+        if serializer.data['status'] == 'Done':
+            id = serializer.data['supporter']
+            supporter = models.Supporter.objects.filter(id=id).first()
+            supporter.count -= 1
+            supporter.save()
         return Response(serializer.data)
      
 

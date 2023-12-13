@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 class SupporterSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Supporter
-        fields = ['id', 'user', 'status']
+        fields = ['id', 'user', 'count']
 
 class TicketSerializer(serializers.ModelSerializer):
     class Meta:

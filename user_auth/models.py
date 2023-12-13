@@ -37,12 +37,10 @@ class Supporter(models.Model):
         on_delete=models.CASCADE, 
         verbose_name='User' 
     ) 
-    status = models.CharField( 
-        verbose_name='Status', 
-        max_length=64, 
-        choices=SUPPORTER_STATUS, 
-        default = SUPPORTER_STATUS[0][0] 
-    ) 
+    count = models.PositiveIntegerField(
+        verbose_name='Number of tickets',
+        default=0
+    )
 
 class Tickets(models.Model): 
     TICKET_STATUS = [ 
