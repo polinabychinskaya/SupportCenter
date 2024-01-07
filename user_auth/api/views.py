@@ -73,6 +73,19 @@ class SupportersViewSet(viewsets.ModelViewSet):
 class TicketsViewSet(viewsets.ModelViewSet):
     queryset = models.Tickets.objects.all()
     serializer_class = serializers.TicketSerializer
+
+    def list(self, request):
+        queryset = models.Tickets.objects.select_related('sender').all()
+        serializer = serializers.TicketSerializer(queryset, many=True)
+        for ticket in serializer.data:
+            sender_id = ticket['sender']
+            for ticket_item in queryset:
+                if ticket_item.sender.pk == sender_id:
+                    ticket['sender'] = ticket_item.sender.email
+                    break
+        return Response(serializer.data)
+
+
     def create(self, request):
         serializer = serializers.TicketSerializer(data=request.data)
         token = self.request.COOKIES.get('jwt')
