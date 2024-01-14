@@ -32,6 +32,22 @@ DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1']
 
 
+LOGGING = {
+    "version": 1,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler"
+        }
+    },
+    "loggers": {
+            "django.db.backends": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+            }
+    }
+}
+
+
 # Application definition
 
 INSTALLED_APPS = [
