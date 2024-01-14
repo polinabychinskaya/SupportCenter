@@ -157,3 +157,13 @@ AUTH_USER_MODEL = 'user_auth.User'
 CORS_ORIGIN_ALLOW_ALL = True
 #allows the frontend to get cookies
 CORS_ALLOW_CREDENTIALS = True
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
