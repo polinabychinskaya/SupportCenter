@@ -14,6 +14,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 from django.conf import settings
+from .tasks import email_by_completion
 
 # Create your views here.
 
@@ -132,6 +133,8 @@ class TicketsViewSet(viewsets.ModelViewSet):
             supporter = models.Supporter.objects.filter(id=id).first()
             supporter.count -= 1
             supporter.save()
+            sender = models.User.objects.filter(id = serializer.data['sender']).first()
+            email_by_completion.delay(to_email=sender.email)
         return Response(serializer.data)
 
 class GetAllTicketsForUser(generics.ListAPIView):
