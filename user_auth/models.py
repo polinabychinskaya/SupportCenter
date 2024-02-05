@@ -65,6 +65,11 @@ class Tickets(models.Model):
         verbose_name='Problem desciption', 
         max_length=2048 
     ) 
+    response = models.TextField( 
+        verbose_name='Supporter response', 
+        max_length=2048, 
+        default='The ticket is pending...',
+    )
     created_at = models.DateTimeField(auto_now_add=True) 
     updated_at = models.DateTimeField(auto_now=True) 
     status = models.CharField( 
