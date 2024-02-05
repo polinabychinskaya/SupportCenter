@@ -10,7 +10,11 @@ import jwt, datetime
 from rest_framework import generics
 from django.http import HttpResponse
 import os
-
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
+from django.conf import settings
+from .tasks import email_by_completion
 
 # Create your views here.
 
@@ -50,6 +54,7 @@ class Login(APIView):
         return response
     
 class UserView(APIView):
+    @method_decorator(cache_page(30))
     def get(self, request):
         token = request.COOKIES.get('jwt')
         payload = jwt.decode(token, str(os.getenv('SECRET')), algorithms=['HS256'])
@@ -70,10 +75,21 @@ class SupportersViewSet(viewsets.ModelViewSet):
     queryset = models.Supporter.objects.all()
     serializer_class = serializers.SupporterSerializer
 
+    @method_decorator(cache_page(30))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 class TicketsViewSet(viewsets.ModelViewSet):
+    CACHE_KEY_PREFIX = "tickets_view"
+
     queryset = models.Tickets.objects.all()
     serializer_class = serializers.TicketSerializer
 
+    # Cache key prefixing is a technique used in Django to add a prefix 
+    # to the cache keys before storing or retrieving data from the cache. 
+    # This prefix is usually based on the name of the cache backend and 
+    # allows for creating unique cache keys for different parts of the application.
+    @method_decorator(cache_page(60, key_prefix=CACHE_KEY_PREFIX))
     def list(self, request):
         queryset = models.Tickets.objects.select_related('sender').all()
         serializer = serializers.TicketSerializer(queryset, many=True)
@@ -100,11 +116,13 @@ class TicketsViewSet(viewsets.ModelViewSet):
         supporter.save()
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        delete_cache(self.CACHE_KEY_PREFIX)
         return Response(serializer.data)
     
     # PUT - replaces the whole record
     # PATCH - partial modifications to the record
     def partial_update(self, request, *args, **kwargs):
+        delete_cache(self.CACHE_KEY_PREFIX)
         ticket = self.get_object()
         data = request.data
         ticket.status = data.get('status', ticket.status)
@@ -115,8 +133,9 @@ class TicketsViewSet(viewsets.ModelViewSet):
             supporter = models.Supporter.objects.filter(id=id).first()
             supporter.count -= 1
             supporter.save()
+            sender = models.User.objects.filter(id = serializer.data['sender']).first()
+            email_by_completion.delay(to_email=sender.email)
         return Response(serializer.data)
-     
 
 class GetAllTicketsForUser(generics.ListAPIView):
     serializer_class = serializers.TicketSerializer
@@ -126,4 +145,14 @@ class GetAllTicketsForUser(generics.ListAPIView):
         user = models.User.objects.filter(id=payload['id']).first()
         queryset = models.Tickets.objects.filter(sender=user)
         return queryset
+    
+    @method_decorator(cache_page(30))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
+def delete_cache(key_prefix: str):
+    # Pattern is used to construct a cache key pattern 
+    # for cache invalidation or deletion (the way Redis 
+    # db stores responses is by creating a pattern (key) to response?)
+    keys_pattern = f"views.decorators.cache.cache_*.{key_prefix}.*.{settings.LANGUAGE_CODE}.{settings.TIME_ZONE}"
+    cache.delete_pattern(keys_pattern)

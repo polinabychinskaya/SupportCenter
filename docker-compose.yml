@@ -22,5 +22,24 @@ services:
     depends_on:
       - db
 
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    hostname: redis
+
+  worker:
+    build:
+      context: .
+    hostname: worker
+    entrypoint: celery
+    command: -A project.celery_app worker --loglevel=info
+    volumes:
+      - .:/code 
+    links:
+      - redis
+    depends_on:
+      - redis
+
 volumes:
   postgres_data:
