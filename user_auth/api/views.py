@@ -125,8 +125,10 @@ class TicketsViewSet(viewsets.ModelViewSet):
         delete_cache(self.CACHE_KEY_PREFIX)
         ticket = self.get_object()
         data = request.data
-        ticket.status = data.get('status', ticket.status)
-        ticket.save() 
+        if ticket.response != data.get('response'):
+            ticket.response = data.get('response', ticket.response)
+            ticket.status = 'Done'
+            ticket.save() 
         serializer = self.get_serializer(ticket)
         if serializer.data['status'] == 'Done':
             id = serializer.data['supporter']

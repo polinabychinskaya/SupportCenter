@@ -25,4 +25,4 @@ class SupporterSerializer(serializers.ModelSerializer):
 class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tickets
-        fields = ['id', 'sender', 'supporter', 'description', 'created_at', 'updated_at', 'status']
+        fields = ['id', 'sender', 'supporter', 'description', 'response', 'created_at', 'updated_at', 'status']
