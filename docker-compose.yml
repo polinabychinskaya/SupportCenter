@@ -41,5 +41,18 @@ services:
     depends_on:
       - redis
 
+  beat:
+      build:
+        context: .
+      hostname: beat
+      entrypoint: celery
+      command: -A project.celery_app beat --loglevel=info
+      volumes:
+        - .:/code 
+      links:
+        - redis
+      depends_on:
+        - redis
+
 volumes:
   postgres_data:

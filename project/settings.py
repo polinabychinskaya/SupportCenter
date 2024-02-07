@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     #for the cases when django and the frontend have different ports
     'corsheaders',
     'user_auth',
+    'django_celery_beat'
 ]
 
 MIDDLEWARE = [
@@ -175,6 +176,7 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Europe/Minsk'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # SMTP Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
