@@ -18,9 +18,13 @@ app.conf.broker_url = settings.CELERY_BROKER_URL
 app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
-    'delete-every-minute': {
+    'delete-every-twenty-secs': {
         'task': 'user_auth.api.tasks.delete_by_completion',
         'schedule': 20.0,
+    },
+    'check-to-remind-every-minute': {
+        'task': 'user_auth.api.tasks.email_reminder',
+        'schedule': 60.0,
     },
 }
 
