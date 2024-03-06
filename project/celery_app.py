@@ -17,6 +17,17 @@ app.conf.broker_url = settings.CELERY_BROKER_URL
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
 
+app.conf.beat_schedule = {
+    'delete-every-twenty-secs': {
+        'task': 'user_auth.api.tasks.delete_by_completion',
+        'schedule': 20.0,
+    },
+    'check-to-remind-every-minute': {
+        'task': 'user_auth.api.tasks.email_reminder',
+        'schedule': 60.0,
+    },
+}
+
 
 @app.task()
 def debug_task():
